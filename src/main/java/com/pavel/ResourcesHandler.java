@@ -15,16 +15,15 @@ public class ResourcesHandler implements HttpHandler {
         name = name.replaceFirst("/+", "");
         InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(name);
 
-        byte[] targetArray = new byte[0];
-
-        if (resourceAsStream != null) {
-            targetArray = new byte[resourceAsStream.available()];
-            resourceAsStream.read(targetArray);
-        }
+        if (resourceAsStream == null) return;
 
         try (OutputStream os = exchange.getResponseBody()) {
-            exchange.sendResponseHeaders(200, targetArray.length);
-            os.write(targetArray);
+            exchange.sendResponseHeaders(200, resourceAsStream.available());
+            byte[] buffer = new byte[1024];
+            int len;
+            while ((len = resourceAsStream.read(buffer)) != -1) {
+                os.write(buffer, 0, len);
+            }
         }
     }
 }
